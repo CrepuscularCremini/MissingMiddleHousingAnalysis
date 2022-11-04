@@ -7,9 +7,10 @@
 *.shp
 *.xml
 *.shx
+*.gpkg
 
 # Other Stuff
-LegacyScripts/
+analysis.py
 sources.txt
 
 # Byte-compiled / optimized / DLL files
