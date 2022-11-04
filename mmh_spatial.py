@@ -6,25 +6,31 @@ import numpy as np
 import osmnx as ox
 from osmnx.projection import project_gdf
 
+## Defaults Pulled from https://missingmiddlehousing.com/types
+accessory_feet = {'adu' : (10, 15)}
+development_feet = {'duplex' : (50, 100),
+                    'triplex_stacked' : (40, 105),
+                    'fourplex_stacked' : (50, 120),
+                    'townhouse_individual' : (25, 110),
+                    'multiplex_medium' : (95, 115),
+                    'cottage_court' : (110, 150),
+                    'courtyard_building' : (85, 110)}
+
 default_accessory = {'adu': (3.05, 4.57)}
-default_development = {'duplex': (16.76, 33.53),
-                     'triplex': (12.19, 32.0),
-                     'fourplex': (15.24, 36.58),
-                     'townhouse': (3.05, 7.62),
-                     'multiplex': (28.96, 35.05),
-                     'cottage court': (33.53, 45.72)}
+default_development = {'duplex': (15.24, 30.48), 'triplex_stacked': (12.19, 32.0), 'fourplex_stacked': (15.24, 36.58), 'townhouse_individual': (7.62, 33.53), 'multiplex_medium': (28.96, 35.05), 'cottage_court': (33.53, 45.72), 'courtyard_building': (25.91, 33.53)}
+
 
 ## Convert default dictionaries from feet to meters
-# def meters_conversion(dict):
-#     for key, itm in dict.items():
-#         l, w = itm
-#         lm = round(l * 0.3048, 2)
-#         wm = round(w * 0.3048, 2)
-#         dict[key] = (lm, wm)
-#     print(dict)
-#
-# meters_conversion(default_accessory)
-# meters_conversion(default_development)
+def meters_conversion(dict):
+    for key, itm in dict.items():
+        l, w = itm
+        lm = round(l * 0.3048, 2)
+        wm = round(w * 0.3048, 2)
+        dict[key] = (lm, wm)
+    print(dict)
+
+# meters_conversion(accessory_feet)
+# meters_conversion(development_feet)
 
 def get_osm_footprints(area, save = True):
     if isinstance(area, gpd.GeoDataFrame):
@@ -59,7 +65,7 @@ def simplify_parcel(parcel_layer, method = 'None', reproject = True, footprint =
             pl = parcel_layer.reset_index(drop = True).reset_index().copy()
             pl.rename(columns = {'index' : 'parcel_id'}, inplace = True)
             return pl
-        elif method == 'simple':
+        elif method == 'Simple':
             pl = parcel_layer.drop_duplicates(subset = 'geometry')
             pl = pl.explode(ignore_index = True, index_parts = False)
             pl = pl.reset_index(drop = True).reset_index().copy()
@@ -88,7 +94,7 @@ def assign_orientation(r, method = 'simple'):
         calculate which edge of rectangle fronts the street
         assign that edge as "width"
         '''
-    elif method == 'simple':
+    elif method == 'Simple':
         a, b, c, _, _ = r.Bounding.exterior.coords
         len_list = []
         len1 = Point(a).distance(Point(b))
@@ -111,7 +117,7 @@ def lot_comp(test_width, test_height, actual_width, actual_height, directional =
         else:
             return False
 
-def addon_feasibility(sp, sf, method = 'simple', building_dictionary = None):
+def addon_feasibility(sp, sf, method = 'Simple', building_dictionary = None):
     sf_cent = gpd.GeoDataFrame(sf.copy(), crs = sf.crs, geometry = sf.Centroid)
     sf_cent = sf_cent[['foot_id', 'width', 'height', 'geometry', 'Centroid']].copy()
 
@@ -123,7 +129,7 @@ def addon_feasibility(sp, sf, method = 'simple', building_dictionary = None):
     if not building_dictionary:
         building_dictionary = default_accessory
 
-    if method == 'simple':
+    if method == 'Simple':
         df['foot_area'] = df.footprint_width * df.footprint_height
         df.sort_values('foot_area', ascending = False, inplace = True)
         df = df.groupby('parcel_id').agg({'parcel_width' : 'first', 'parcel_height' : 'first', 'geometry' : 'first', 'parcel_centroid' : 'first', 'footprint_width' : 'first', 'footprint_height' : 'sum', 'footprint_centroid' : 'first'}).reset_index()
