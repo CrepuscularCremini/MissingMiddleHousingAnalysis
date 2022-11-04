@@ -6,6 +6,26 @@ import numpy as np
 import osmnx as ox
 from osmnx.projection import project_gdf
 
+default_accessory = {'adu': (3.05, 4.57)}
+default_development = {'duplex': (16.76, 33.53),
+                     'triplex': (12.19, 32.0),
+                     'fourplex': (15.24, 36.58),
+                     'townhouse': (3.05, 7.62),
+                     'multiplex': (28.96, 35.05),
+                     'cottage court': (33.53, 45.72)}
+
+## Convert default dictionaries from feet to meters
+# def meters_conversion(dict):
+#     for key, itm in dict.items():
+#         l, w = itm
+#         lm = round(l * 0.3048, 2)
+#         wm = round(w * 0.3048, 2)
+#         dict[key] = (lm, wm)
+#     print(dict)
+#
+# meters_conversion(default_accessory)
+# meters_conversion(default_development)
+
 def get_osm_footprints(area, save = True):
     if isinstance(area, gpd.GeoDataFrame):
         tgdf = area.to_crs(epsg = 4326)
@@ -14,7 +34,7 @@ def get_osm_footprints(area, save = True):
         west, south, east, north = area
     gdf = ox.geometries.geometries_from_bbox(north, south, east, west, tags={'building':True})
     if save:
-        gdf.reset_index()[['osmid', 'geometry']].to_file(save if save != True else 'Footprints')
+        gdf.reset_index()[['osmid', 'building', 'geometry']].to_file(save if save != True else 'Footprints')
     return gdf
 
 def simplify_footprints(foot_layer, method = 'None', reproject = True):
@@ -101,7 +121,7 @@ def addon_feasibility(sp, sf, method = 'simple', building_dictionary = None):
     df.rename(columns = {'width_left' : 'parcel_width', 'height_left' : 'parcel_height', 'Centroid_left' : 'parcel_centroid', 'width_right' : 'footprint_width', 'height_right' : 'footprint_height', 'Centroid_right' : 'footprint_centroid'}, inplace = True)
 
     if not building_dictionary:
-        building_dictionary = {'adu' : (10,15)}
+        building_dictionary = default_accessory
 
     if method == 'simple':
         df['foot_area'] = df.footprint_width * df.footprint_height
@@ -134,21 +154,34 @@ def addon_feasibility(sp, sf, method = 'simple', building_dictionary = None):
 
 def development_feasibility(sp, building_dictionary = None):
     if not building_dictionary:
-        building_dictionary = {'duplex' : (55, 110),
-                                'triplex' : (40, 105),
-                                'fourplex' : (50, 120),
-                                'townhouse' : (10, 25),
-                                'multiplex' : (95, 115),
-                                'cottage court' : (110, 150)}
+        building_dictionary = default_development
 
-        for idx, val in sp.iterrows():
-            for keys, itms in building_dictionary.items():
-                sp.loc[idx, '{0}'.format(keys)] = lot_comp(itms[0], itms[1], val['width'], val['height'])
+    for idx, val in sp.iterrows():
+        for keys, itms in building_dictionary.items():
+            sp.loc[idx, '{0}'.format(keys)] = lot_comp(itms[0], itms[1], val['width'], val['height'])
 
-        return_list = ['parcel_id', 'geometry']
-        for key in building_dictionary.keys():
-            return_list.append(key)
-        return sp[return_list]
+    return_list = ['parcel_id', 'geometry']
+    for key in building_dictionary.keys():
+        return_list.append(key)
+    return sp[return_list]
+
+def conversion_feasibility(foot_layer, foot_column = 'building', foot_values = ['garage', 'shed'], building_dictionary = None):
+    if not building_dictionary:
+        building_dictionary = default_accessory
+
+    cl = foot_layer[foot_layer[foot_column].isin(foot_values)].copy()
+    cl = cl.reset_index(drop = True).reset_index()
+    cl.rename(columns = {'index' : 'conversion_id'}, inplace = True)
+
+    for idx, val in cl.iterrows():
+        for keys, itms in building_dictionary.items():
+            cl.loc[idx, 'conversion_{0}'.format(keys)] = lot_comp(itms[0], itms[1], val['width'], val['height'], directional = False)
+
+    return_list = ['conversion_id', 'geometry']
+    for key in building_dictionary.keys():
+        return_list.append(f'conversion_{key}')
+    return cl[return_list]
+
 
 def parcel_rejoin(parcel_layer, join_layer, drop_duplicates = True):
     if drop_duplicates:
@@ -156,7 +189,7 @@ def parcel_rejoin(parcel_layer, join_layer, drop_duplicates = True):
     if parcel_layer.crs != join_layer.crs:
         parcel_layer.to_crs(join_layer.crs, inplace = True)
     join_cent = gpd.GeoDataFrame(join_layer.copy(), geometry = join_layer.representative_point(), crs = join_layer.crs)
-    out_layer = parcel_layer.sjoin(join_cent, predicate = 'contains')
+    out_layer = parcel_layer.sjoin(join_cent, predicate = 'contains', how = 'left')
     out_layer.drop(columns = ['index_right'], inplace = True)
     return out_layer
 
