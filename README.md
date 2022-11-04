@@ -32,8 +32,8 @@ There are several helper functions that help prepare your data to be used in the
 1. clone the repo
 2. dependencies are located in env.yml
 3. at the top of your script add:
-```import sys
-
+```
+import sys
 sys.path.append(path_to_repo)
-
-import mmh_spatial```
+import mmh_spatial
+```
