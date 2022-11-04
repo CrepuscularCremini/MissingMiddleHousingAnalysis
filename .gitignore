@@ -1,0 +1,16 @@
+# Data stuff
+*.cpg
+*.dbf
+*.prj
+*.sbn
+*.sbx
+*.shp
+*.xml
+*.shx
+
+# Other Stuff
+LegacyScripts/
+sources.txt
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
