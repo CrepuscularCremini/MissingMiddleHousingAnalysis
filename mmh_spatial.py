@@ -39,6 +39,8 @@ def get_osm_footprints(area, save = True):
     else:
         west, south, east, north = area
     gdf = ox.geometries.geometries_from_bbox(north, south, east, west, tags={'building':True})
+    gdf = gdf[gdf.geom_type.isin(['Polygon', 'Multipolygon'])]
+
     if save:
         gdf.reset_index()[['osmid', 'building', 'geometry']].to_file(save if save != True else 'Footprints')
     return gdf
@@ -51,7 +53,7 @@ def simplify_footprints(foot_layer, method = 'None', reproject = True):
         fl = foot_layer.reset_index(drop = True).reset_index().copy()
         fl.rename(columns = {'index' : 'foot_id'}, inplace = True)
         return fl
-    elif method == 'Simple':
+    elif method == 'simple':
         fl = foot_layer.dissolve().explode(ignore_index = True, index_parts = False)
         fl = fl.reset_index(drop = True).reset_index().copy()
         fl.rename(columns = {'index' : 'foot_id'}, inplace = True)
@@ -65,7 +67,7 @@ def simplify_parcel(parcel_layer, method = 'None', reproject = True, footprint =
             pl = parcel_layer.reset_index(drop = True).reset_index().copy()
             pl.rename(columns = {'index' : 'parcel_id'}, inplace = True)
             return pl
-        elif method == 'Simple':
+        elif method == 'simple':
             pl = parcel_layer.drop_duplicates(subset = 'geometry')
             pl = pl.explode(ignore_index = True, index_parts = False)
             pl = pl.reset_index(drop = True).reset_index().copy()
@@ -94,7 +96,7 @@ def assign_orientation(r, method = 'simple'):
         calculate which edge of rectangle fronts the street
         assign that edge as "width"
         '''
-    elif method == 'Simple':
+    elif method == 'simple':
         a, b, c, _, _ = r.Bounding.exterior.coords
         len_list = []
         len1 = Point(a).distance(Point(b))
@@ -117,7 +119,7 @@ def lot_comp(test_width, test_height, actual_width, actual_height, directional =
         else:
             return False
 
-def addon_feasibility(sp, sf, method = 'Simple', building_dictionary = None):
+def addon_feasibility(sp, sf, method = 'simple', building_dictionary = None):
     sf_cent = gpd.GeoDataFrame(sf.copy(), crs = sf.crs, geometry = sf.Centroid)
     sf_cent = sf_cent[['foot_id', 'width', 'height', 'geometry', 'Centroid']].copy()
 
@@ -129,7 +131,7 @@ def addon_feasibility(sp, sf, method = 'Simple', building_dictionary = None):
     if not building_dictionary:
         building_dictionary = default_accessory
 
-    if method == 'Simple':
+    if method == 'simple':
         df['foot_area'] = df.footprint_width * df.footprint_height
         df.sort_values('foot_area', ascending = False, inplace = True)
         df = df.groupby('parcel_id').agg({'parcel_width' : 'first', 'parcel_height' : 'first', 'geometry' : 'first', 'parcel_centroid' : 'first', 'footprint_width' : 'first', 'footprint_height' : 'sum', 'footprint_centroid' : 'first'}).reset_index()
