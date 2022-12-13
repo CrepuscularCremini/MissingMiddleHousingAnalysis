@@ -21,6 +21,11 @@ Joining these layers to zoning and other regulatory layers, you can filter the o
 However having the calculations for every parcel means you can ask hypotheticals as well:
 1. what if we allowed ADUs in xyz zoning district, how many housing units could be added?
 2. what types of missing middle housing could by built on abc property if they took down their single family home?
+<br>
+An examination of hypothetical development potential using a few block in Denver, Colorado as an example.
+<br>
+![MMH Feasibility Potential Example](./Graphics/MMH_FeasibilityPotential.png)
+<br>
 
 ### Methods
 Currently there is only the "simple" methods for each function which make more assumptions about the geometries but are faster. Other methods that are more accurate to the spatial configuration of the properties are currently in development.
