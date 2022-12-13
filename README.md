@@ -1,18 +1,16 @@
-# MissingMiddleHousingAnalysis
-Several functions to calculate the feasibility of missing middle housing at the parcel level. This is primarily an exploratory and visual tool allowing you to explore the current and potential future housing environment. All calculations are purely spatial and do not consider any regulations that may exist. **These calculations do not necessarily reflect the actual development environment.**
-
-### Acknowledgements
-- The default dimensions for each missing middle housing type is based on the "ideal specifications" for each type as developed by [Opticos Design](https://missingmiddlehousing.com/types). More information about missing middle housing can be viewed on their website.
-- These functions contain convenience wrappers for several methods from the [OSMNX package](https://osmnx.readthedocs.io/en/stable/). Future iterations of these calculations will lean on that package even more.
+# Missing Middle Housing Analysis
+Several functions to calculate the feasibility of missing middle housing at the parcel level. This is primarily an **_exploratory and visual tool allowing you to explore the current and potential future housing environment._** All calculations are purely spatial and do not consider any regulations that may exist. **These calculations do not necessarily reflect the actual development environment.**
 
 ### Main Functions
-1. addon_feasibility - this calculates if there is space to add an **accessory dwelling unit** (or other accessory building) to a property, given the existing buildings on the property (i.e. a house and a garage)
-2. development_feasibility - this calculates if there is space to build a **new development** of a certain type of missing middle housing. The calculation is based on an empty parcel.
-3. conversion_feasibility - this calculates the potential to **convert existing buildings** (such as garages) that are already on the property to accessory dwelling units or other accessory buildings. This is limited to building footprints that have a separate classification as the main building, which means some attached garages may be missed.
+1. **addon_feasibility** - this calculates if there is space to add an **accessory dwelling unit** (or other accessory building) to a property, given the existing buildings on the property (i.e. a house and a garage)
+2. **development_feasibility** - this calculates if there is space to build a **new development** of a certain type of missing middle housing. The calculation is based on an empty parcel.
+3. **conversion_feasibility** - this calculates the potential to **convert existing buildings** (such as garages) that are already on the property to accessory dwelling units or other accessory buildings. This is limited to building footprints that have a separate classification as the main building, which means some attached garages may be missed.
 
 Each method calculates feasibility for **every** parcel. For example, this means parcels with existing buildings are included in the calculation for new development as if there was no building present. Additionally, parking garages that have been classified as 'garage' may be included in the conversion_feasibility analysis.
 
 This was done intentionally as it allows exploration of future scenarios in addition to existing conditions.
+
+### Example Uses
 
 Joining these layers to zoning and other regulatory layers, you can filter the outputs to get an idea of what the existing conditions are:
 1. where is vacant land that can be developed as missing middle housing?
@@ -21,9 +19,9 @@ Joining these layers to zoning and other regulatory layers, you can filter the o
 However having the calculations for every parcel means you can ask hypotheticals as well:
 1. what if we allowed ADUs in xyz zoning district, how many housing units could be added?
 2. what types of missing middle housing could by built on abc property if they took down their single family home?
-<br>
+
 An examination of hypothetical development potential using a few block in Denver, Colorado as an example.
-<br>
+
 ![MMH Feasibility Potential Example](./Graphics/MMH_FeasibilityPotential.png)
 <br>
 
@@ -42,3 +40,7 @@ import sys
 sys.path.append(path_to_repo)
 import mmh_spatial
 ```
+
+### Acknowledgements
+- The default dimensions for each missing middle housing type is based on the "ideal specifications" for each type as developed by [Opticos Design](https://missingmiddlehousing.com/types). More information about missing middle housing can be viewed on their website.
+- These functions contain convenience wrappers for several methods from the [OSMNX package](https://osmnx.readthedocs.io/en/stable/). Future iterations of these calculations will lean on that package even more.
